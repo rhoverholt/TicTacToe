@@ -11,30 +11,29 @@ body {
 
 header, footer {
     text-align: center;
-    height: 50 px;
     padding: 10px;
 }
 
 #game-table {
     margin: auto;
 /*    background: yellow; */
-    height: 780px;
-    width: 770px;
+    height: 645px;
+    width: 635px;
 }
 
 .row {
     display: flex;
-    height: 250px;
+    height: 205px;
     background: white;
     justify-content: space-around;
     align-items: center;
 }
 
 .cell {
-    font-size: 225px;
+    font-size: 185px;
     text-align: center;
     vertical-align: middle;
-    width: 250px;
+    width: 205px;
     height: 100%;
 }
 
@@ -51,4 +50,53 @@ header, footer {
 .col-divider {
     width: 10px;
     height: 100%;
+}
+
+#play-O-btn {
+    text-align: center;
+}
+
+#footer-btns {
+    width: 470px;
+    display: inline-flex;
+    justify-content: space-between;
+}
+
+label {
+    padding: 0px 10px 0px 2px;
+}
+
+input[type='radio'] {
+    margin-top: -12px;
+    vertical-align: middle;
+}
+
+h1, input, label {
+    font-size: 2em;
+}
+
+@media screen and (max-width: 710px) {
+
+    #game-table {
+        height: 360px;
+        width: 350px;
+    }
+
+    .row {
+        height: 110px;
+    }
+ 
+    .cell {
+        font-size: 110px;
+        width: 110px;
+    }
+    
+    h1, input, label {
+        font-size: 1.5em;
+    }
+
+    #footer-btns {
+        width: 350px;
+    }
+    
 }

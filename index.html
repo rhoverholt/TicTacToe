@@ -4,12 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./assets/css/style.css">
-    <title>Title</title>
+    <title>Tic Tac Toe</title>
   </head>
 
   <body>
     <header>
-        <h1>Play a game of Tic Tac Toe!</h1>
+      <h1>Play a game of Tic Tac Toe!<br/></h1>
+      <h1 id="play-status" style="display: inline">I'll play: </h1>
+      <input type="radio" name="play-side" id="play-X" value="X" checked>
+      <label for="play-X">X </label>
+      <input type="radio" name="play-side" id="play-O" value="O">
+      <label for="play-O">O </label>
+      <input type="radio" name="play-side" id="play-both" value="Both">
+      <label for="play-both">Both</label>
+      <br/>
+      <input type="button" id="start-btn" value = "Start Game">
     </header>
 
     <div id="game-table">
@@ -17,7 +26,11 @@
     </div>
 
     <footer>
-        <h1 id = "output-msg"></h1>
+      <div id="footer-btns">
+        <input type="button" id="undo" value = "Undo" disabled>
+        <input type="button" id="refresh" value = "Refresh" disabled>
+      </div>
+      <h1 id = "output-msg"></h1>
     </footer>
   </body>
 

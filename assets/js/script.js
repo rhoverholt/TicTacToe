@@ -1,14 +1,15 @@
-let isGameOver = false;
-
+let isGameOver = false,
+    isGameStarted = false;
 let gameBoard = [[0,0,0],[0,0,0],[0,0,0]]; // 0 = empty, 'X', 'O'
-
-var outputMsgEl = document.getElementById("output-msg");
-
+let isPlayerBoth = false; // determine if the computer plays a move or not
+let isPlayerX = true;
+let moveArray = []; // maintain a list of moves to allow undos
+let outputMsgEl = document.getElementById("output-msg");
 let WSIP = 0; let SIDE = 0;
 
 createGameTable();
 
-// computerMove(gameBoard); // computer can go first
+displayOutput("Begin by choosing sides or simply making a move");
 
 document.addEventListener("click", processClick);
 
@@ -90,8 +91,25 @@ function createGameTable() {
 // Display message of game status showing who's move is next or who has won.
 function processClick(event) {
 
-    // ignore the click if it wasn't in a cell or if the game's already over
-    if (event.target.id == "" || isGameOver) {
+    // ignore the click if it wasn't in a cell or button 
+    if (event.target.id == "") {
+        return;
+    }
+
+    switch (event.target.id) {
+        case "start-btn":
+            processStartClick();
+            return;
+        case "undo":
+            processUndoClick();
+            return;
+        case "refresh":
+            window.location.reload();
+            return;
+    }
+
+    // ignore the click if the game is over
+    if (isGameOver) {
         return;
     }
 
@@ -105,14 +123,100 @@ function processClick(event) {
     // process the click that's in an empty cell
     if (element.textContent == "") {
         
+        if (!isGameStarted) {
+            isGameStarted = true;
+            isPlayerBoth = false;
+            isPlayerBlack = true;
+            document.getElementById("play-X").checked = true;
+        }
+
         processMove(element);
 
-        if (!isGameOver) {
+        if (!isGameOver && !isPlayerBoth) {
             playComputerMove(); // plays the move and ends via processMove()
         }
 
     } else {
         console.log(`Clicked cell (${element.id}) already contains '${element.textContent}'`);
+    }
+
+    function processStartClick() {
+
+        // set the isPlayer flags
+        isPlayerBoth = document.getElementById("play-both").checked;
+        isPlayerBlack = isPlayerBoth || document.getElementById("play-X").checked;
+
+        isGameStarted = true;
+
+        if (document.getElementById("play-O").checked) {
+            playComputerMove(); // plays the turn and ends via processMove
+            return;
+        }
+
+        // disable the radio buttons and the Start Button, as the game has started:
+        document.getElementById("play-X").disabled = true;
+        document.getElementById("play-O").disabled = true;
+        document.getElementById("play-both").disabled = true;
+        document.getElementById("start-btn").disabled = true;
+        document.getElementById("play-status").textContent = "I'm playing: ";
+
+        // make sure the refresh button is enabled (undo will enable once a move has been made)
+        document.getElementById("refresh").disabled = false;
+
+        // set the isPlayerBoth flag
+        isPlayerBoth = document.getElementById("play-both").checked;
+        isPlayerBlack = isPlayerBoth || document.getElementById("play-X").checked;
+
+        console.log(isPlayerBlack);
+
+        // wait for the player to take their turn, whether they are X or both.
+        displayNextTurn();
+        return;
+    }
+
+    function processUndoClick() {
+        undoMove();
+
+        console.log(`Both: ${isPlayerBoth}, Black: ${isPlayerBlack}`);
+
+        if (!isPlayerBoth) { 
+            // Need to undo two moves, the computer's and the player's
+            // but if the player is black and the board board was full only the one move
+            // needs to be undone...
+            if (!isPlayerBlack ||
+                (isPlayerBlack && (!isBlackTurn(gameBoard)))) {
+                undoMove();
+            }
+        }
+
+        function undoMove() {
+
+            isGameOver = false;
+
+            if (!moveArray.length) {
+                displayOutput("There are no moves to undo!");
+                return;
+            }
+    
+            var [row, col] = moveArray.pop();
+    
+            document.getElementById(`cell-${row}-${col}`).textContent = "";
+            gameBoard[row][col] = 0;
+
+            if (!moveArray.length) { // no more moves to undo so disable the button
+                document.getElementById("play-X").disabled = false;
+                document.getElementById("play-O").disabled = false;
+                document.getElementById("play-both").disabled = false;
+                document.getElementById("start-btn").disabled = false;
+                document.getElementById("play-status").textContent = "I'll play: ";
+            
+                // make sure the undo and refresh buttons are enabled
+                document.getElementById("undo").disabled = true;
+                document.getElementById("refresh").disabled = true;
+            }
+
+            displayNextTurn();    
+        }
     }
 }
 
@@ -129,7 +233,20 @@ function processMove(element) {
     // update the gameBoard
     row = element.id[5]; // 'cell-R-C'
     col = element.id[7];
+
+    moveArray.push([row,col]);
     gameBoard[row][col] = element.textContent;
+
+    // disable the radio buttons and the Start Button, as a move has been made:
+    document.getElementById("play-X").disabled = true;
+    document.getElementById("play-O").disabled = true;
+    document.getElementById("play-both").disabled = true;
+    document.getElementById("start-btn").disabled = true;
+    document.getElementById("play-status").textContent = "I'm playing: ";
+
+    // make sure the undo and refresh buttons are enabled
+    document.getElementById("undo").disabled = false;
+    document.getElementById("refresh").disabled = false;
 
     let result = getGameStatus(gameBoard);
 
@@ -145,23 +262,24 @@ function processMove(element) {
         return result;
     }
 
-    displayNextTurn(element.textContent);
+    displayNextTurn();
     return false; // game is not yet over
-
-    function displayNextTurn() {
-
-        let nextTurn = ((isBlackTurn(gameBoard)) ? 'X' : 'O');
-
-        displayOutput(`It's now ${nextTurn}'s turn.`);
-    }
 }
+
+function displayNextTurn() {
+
+    let nextTurn = ((isBlackTurn(gameBoard)) ? 'X' : 'O');
+
+    displayOutput(`It's now ${nextTurn}'s turn.`);
+}
+
 
 function displayWinner(winner){
     displayOutput(`Game Over - ${winner} Wins!`);
 }
 
 function displayTie() {
-    displayOutput("Game Over - You tied!");
+    displayOutput("Game Over - It's a tie!");
 }
 
 function displayOutput(text) {
@@ -219,17 +337,22 @@ function getGameStatus(board) {
 }
 
 function playComputerMove() {
-    let bestMove = whereShouldIPlay(gameBoard); // returns [row, col, X/O/T]
 
-    console.log(`Game Board: ${gameBoard}`);
-    console.log(`Best Move: ${bestMove}`);
-    console.log(WSIP);
-    console.log(SIDE);
 
-    processMove(document.getElementById(`cell-${bestMove[0]}-${bestMove[1]}`));
-    
-    // returns the row, col. X/O/T where we want to move
-    // assumes that we need to make a move...the game is not yet over!
+    function sleep (time) {
+        return new Promise((resolve) => setTimeout(resolve, time));
+      }
+      
+    sleep(500).then(() => {
+          // Do something after the sleep!
+
+        let bestMove = whereShouldIPlay(gameBoard); // returns [row, col, X/O/T]
+
+        processMove(document.getElementById(`cell-${bestMove[0]}-${bestMove[1]}`));
+    })
+        
+        // returns the row, col. X/O/T where we want to move
+        // assumes that we need to make a move...the game is not yet over!
     function whereShouldIPlay(myBoard) {
         
         let newBoard = copyBoard(myBoard);
@@ -251,7 +374,6 @@ function playComputerMove() {
                     // now add my move to it
                     newBoard[row][col] = whoseTurn;
                     let playResult = getGameStatus(newBoard);
-//                    console.log(`Where Should I play: ${playResult}, WSIP: ${++WSIP}`);
 
                     if (!playResult) { // No winner is yet found 
                         // recursively determine the best result by playing that move
@@ -402,18 +524,6 @@ function playComputerMove() {
         }
 
         return myResults;
-
-        // // now examine the results array to find the best move for me!
-        // let winner = (whoseTurn = 'X') ? 'O' : 'X'; // default to the other side winning
-        // for (i=0; i < myResults.length; i++) {
-        //     if (myResults[i][2] === whoseTurn) { // I win!
-        //         console.log("I win by playing at " + myResults[i][0] + ", " + myResults[i][1]);
-        //         return whoseTurn;
-        //     } else if (myResults[i][2] === "T") { // I tied
-        //         winner = "T";
-        //     }
-        // }
-        // return winner;  
     }
 
     // resultsArray has 3 rows of 3 columns, each being with 0 (already played), X, O, or T
@@ -421,8 +531,6 @@ function playComputerMove() {
     // mySide says whether I'm X or O
     // Output: [row, col, X/O/T]
     function chooseBestResult(resultArray, mySide) {
-        // console.log(resultArray);
-        // console.log(`Side: ${mySide} ${++SIDE}`);
  
         let winArray = [];
         let loseArray = [];
