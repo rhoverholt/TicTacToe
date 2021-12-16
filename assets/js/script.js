@@ -125,11 +125,8 @@ function processClick(event) {
         }
 
         // disable the radio buttons and the Start Button, as the game has started:
-        document.getElementById("play-X").disabled = true;
-        document.getElementById("play-O").disabled = true;
-        document.getElementById("play-both").disabled = true;
-        document.getElementById("start-btn").disabled = true;
-        document.getElementById("play-status").textContent = "I'm playing: ";
+
+        disableRadioButtons(true);
 
         // make sure the refresh button is enabled (undo will enable once a move has been made)
         document.getElementById("refresh").disabled = false;
@@ -145,8 +142,6 @@ function processClick(event) {
 
     function processUndoClick() {
         undoMove();
-
-        console.log(`Both: ${isPlayerBoth}, Black: ${isPlayerBlack}`);
 
         if (!isPlayerBoth) { 
             // Need to undo two moves, the computer's and the player's
@@ -173,11 +168,7 @@ function processClick(event) {
             gameBoard[row][col] = 0;
 
             if (!moveArray.length) { // no more moves to undo so disable the button
-                document.getElementById("play-X").disabled = false;
-                document.getElementById("play-O").disabled = false;
-                document.getElementById("play-both").disabled = false;
-                document.getElementById("start-btn").disabled = false;
-                document.getElementById("play-status").textContent = "I'll play: ";
+                disableRadioButtons(false);
             
                 // make sure the undo and refresh buttons are enabled
                 document.getElementById("undo").disabled = true;
@@ -187,6 +178,14 @@ function processClick(event) {
             displayNextTurn(false);    
         }
     }
+}
+
+function disableRadioButtons(isDisable) {
+    document.getElementById("play-X").disabled = isDisable;
+    document.getElementById("play-O").disabled = isDisable;
+    document.getElementById("play-both").disabled = isDisable;
+    document.getElementById("start-btn").disabled = isDisable;
+    document.getElementById("play-status").textContent = ((isDisable) ? "I'm playing: " : "I'll play");
 }
 
 // Place a move in the given element
@@ -207,29 +206,11 @@ function processMove(element) {
     gameBoard[row][col] = element.textContent;
 
     // disable the radio buttons and the Start Button, as a move has been made:
-    document.getElementById("play-X").disabled = true;
-    document.getElementById("play-O").disabled = true;
-    document.getElementById("play-both").disabled = true;
-    document.getElementById("start-btn").disabled = true;
-    document.getElementById("play-status").textContent = "I'm playing: ";
+    disableRadioButtons(true);
 
     // make sure the undo and refresh buttons are enabled
     document.getElementById("undo").disabled = false;
     document.getElementById("refresh").disabled = false;
-
-    // let result = getGameStatus(gameBoard);
-
-    // if (result === "X" || result === "O") {
-    //     displayWinner(result);
-    //     isGameOver = true;
-    //     return result;
-    // }
-
-    // if (result === "T") {
-    //     displayTie();
-    //     isGameOver = true;
-    //     return result;
-    // }
 
     displayNextTurn(getGameStatus(gameBoard));
     return false; // game is not yet over
@@ -237,7 +218,6 @@ function processMove(element) {
 
 function displayNextTurn(gameStatus) {
 
-    console.log(gameStatus);
     if ([false, "T", "X", "O"].indexOf(gameStatus) === -1) { // if gameStatus is an invalid value...something other than null, T, X, or O
         console.log("gameStatus ERROR!");
         return;
@@ -331,7 +311,6 @@ function playComputerMove() {
         let newBoard = copyBoard(myBoard);
 
         let whoseTurn = (isBlackTurn(myBoard) ? 'X' : 'O');
-        let oppsTurn = (whoseTurn === 'X') ? 'O' : 'X';
 
         // create a result array for the results of all possible moves
         let myResults = [];
@@ -341,10 +320,7 @@ function playComputerMove() {
             let colArray = [];
             for (let col = 0; col < 3; col++) {
                 if (myBoard[row][col] === 0) {
-                    // // create a copy of the board
-                    // var newBoard = copyBoard(myBoard);
-
-                    // now add my move to it
+                    // add my move to it
                     newBoard[row][col] = whoseTurn;
                     let playResult = getGameStatus(newBoard);
 
@@ -353,7 +329,7 @@ function playComputerMove() {
                         playResult = whoWins(newBoard); 
                     }
                     colArray.push(playResult);
-                    newBoard[row][col] = 0; // reset to the original board
+                    newBoard[row][col] = 0; // remove my move from it
                 } else { // move not allowed
                     colArray.push(0);
                 }
@@ -413,90 +389,6 @@ function playComputerMove() {
             rowArray.push(colArray);
         }
         return rowArray;
-    }
-
-    // This is easy mode -- it randomly guesses whether a play would result in W, O or T.
-    // input - a board situation
-    // output - a list of the results from playing in each cell
-    function HIDEprojectBoardResults(myBoard) {
-
-        let results = [];
-
-        // check all possible moves
-        for (row = 0; row < 3; row++) {
-            results.push(myBoard[row]);
-            for (col = 0; col < 3; col++) {
-                if (results[row][col] === 0) {
-                    switch (Math.floor(Math.random() * 3)) {
-                        case 0:
-                            results[row][col] = 'X';
-                            break;
-                        case 1:
-                            results[row][col] = 'O';
-                            break;
-                        default:
-                            results[row][col] = 'T';
-                            break;
-                    }
-                } else {
-                    results[row][col] = 0; // cannot play here, as it was already played
-                }
-            }
-        }
-        return results;
-    }
-
-    // This is hard mode -- it cannot be beaten!
-    // input - a board situation
-    // output - a list of the results from playing in each cell
-    function projectBoardResults(myBoard) {
-
-        // // First, check to see if the game is over, and if so, return the result
-        // let result = getGameStatus(myBoard);
-        
-        // if (result !== false) {
-        //     return result; // no need to look further, the game is over
-        // }
-
-        let whoseTurn = (isBlackTurn(myBoard) ? 'X' : 'O');
-        let oppsTurn = (whoseTurn === 'X') ? 'O' : 'X';
-
-        // create a result array for the results of all possible moves
-        let myResults = [];
-
-        // check all possible moves
-        for (row = 0; row < 3; row++) {
-            let colArray = [];
-            for (col = 0; col < 3; col++) {
-
-//                colArray.push(myBoard[row][col]);
-
-                // if I can move here, try it out and see what happens
-                if (myBoard[row][col] === 0) {
-                    // create a copy of the board
-
-                    var newBoard = copyBoard(myBoard);
-
-                    // now add my move to it
-                    newBoard[row][col] = whoseTurn;
-                    let playResult = getGameStatus(newBoard);
-
-                    if (!playResult) { // No winner is yet found
-
-                        // recursively determine the best result by playing that move
-                        playResult = whoWins(newBoard); 
-                    }
-
-                    colArray.push(playResult[2]);
-                } else { // move not allowed
-                    colArray.push(0);
-                }
-
-                myResults.push(colArray);
-            }
-        }
-
-        return myResults;
     }
 
     // resultsArray has 3 rows of 3 columns, each being with 0 (already played), X, O, or T
