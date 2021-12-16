@@ -1,14 +1,8 @@
-let isGameOver = false,
-    isGameStarted = false;
-let gameBoard = [[0,0,0],[0,0,0],[0,0,0]]; // 0 = empty, 'X', 'O'
-let isPlayerBoth = false; // determine if the computer plays a move or not
-let isPlayerX = true;
-let moveArray = []; // maintain a list of moves to allow undos
-let outputMsgEl = document.getElementById("output-msg");
-let WSIP = 0; let SIDE = 0;
+let isGameStarted = false, isGameOver = false, isPlayerBoth = false, isPlayerX = true, isPlayerTurn = true,
+    gameBoard = [[0,0,0],[0,0,0],[0,0,0]], // 0 = empty, 'X', 'O' = played
+    moveArray = []; // maintain a list of moves so they can be undone as needed
 
-createGameTable();
-
+createGameTable(); // create the HTML to display the game
 displayOutput("Begin by choosing sides or simply making a move");
 
 document.addEventListener("click", processClick);
@@ -16,14 +10,14 @@ document.addEventListener("click", processClick);
 function createGameTable() {
     const gameTable = document.getElementById("game-table");
 
-    for (row=0; row < 3; row++) {
-        createRow(gameTable, row);
+    for (let row=0; row < 3; row++) {
+        gameTable.append(createRow(row));
         if (row < 2) {
-            createRowDivider(gameTable);
+            gameTable.append(createRowDivider());
         }
     }
 
-    function createRow(element, row) {
+    function createRow(row) {
         
         // create the row element itself
         let rowElement = document.createElement("div");
@@ -31,55 +25,32 @@ function createGameTable() {
         rowElement.id = `row-${row}`;
 
         // add the cell elements to the row
-        for (cell=0; cell <=4; cell++) {
-            if (cell === 1 || cell === 3) {
-                createCellDivider(rowElement);
-            } else {
-                let column = cell/2;
-                createCell(rowElement, row, column);
+        for (let col=0; col < 3; col++) {
+            rowElement.append(createCell(row, col));
+            if (col < 2) {
+                rowElement.append(createCellDivider());
             }
         }
+        return rowElement;
 
-        // append the row to the initial element
-        element.append(rowElement);
-
-        function createCell(element, row, col) {
-
-            // create the cell itself
+        function createCell(row, col) {
             let cellElement = document.createElement("div");
             cellElement.id = `cell-${row}-${col}`;
             cellElement.classList.add("cell");
-
-            switch (col) {
-                case 0:
-                    cellElement.classList.add("left-cell");
-                    break;
-                case 1:
-                    cellElement.classList.add("left-cell");
-                    break;
-                case 2:
-                    cellElement.classList.add("left-cell");
-                    break;
-                default:
-                    console.log("col error!");
-            }
-
-            // append the cell to the element
-            element.append(cellElement);
+            return cellElement;
         }
 
-        function createCellDivider(element) {
+        function createCellDivider() {
             let divElement = document.createElement("div");
             divElement.classList.add("divider","col-divider");
-            element.append(divElement);
+            return divElement;
         }
     }
 
     function createRowDivider(element) {
         let divElement = document.createElement("div");
         divElement.classList.add("divider","row-divider");
-
-        element.append(divElement);
+        return divElement;
     }
 }
 
@@ -92,7 +63,7 @@ function createGameTable() {
 function processClick(event) {
 
     // ignore the click if it wasn't in a cell or button 
-    if (event.target.id == "") {
+    if (event.target.id == "" || !isPlayerTurn) {
         return;
     }
 
@@ -167,10 +138,8 @@ function processClick(event) {
         isPlayerBoth = document.getElementById("play-both").checked;
         isPlayerBlack = isPlayerBoth || document.getElementById("play-X").checked;
 
-        console.log(isPlayerBlack);
-
         // wait for the player to take their turn, whether they are X or both.
-        displayNextTurn();
+        displayNextTurn(false);
         return;
     }
 
@@ -215,7 +184,7 @@ function processClick(event) {
                 document.getElementById("refresh").disabled = true;
             }
 
-            displayNextTurn();    
+            displayNextTurn(false);    
         }
     }
 }
@@ -248,42 +217,45 @@ function processMove(element) {
     document.getElementById("undo").disabled = false;
     document.getElementById("refresh").disabled = false;
 
-    let result = getGameStatus(gameBoard);
+    // let result = getGameStatus(gameBoard);
 
-    if (result === "X" || result === "O") {
-        displayWinner(result);
-        isGameOver = true;
-        return result;
-    }
+    // if (result === "X" || result === "O") {
+    //     displayWinner(result);
+    //     isGameOver = true;
+    //     return result;
+    // }
 
-    if (result === "T") {
-        displayTie();
-        isGameOver = true;
-        return result;
-    }
+    // if (result === "T") {
+    //     displayTie();
+    //     isGameOver = true;
+    //     return result;
+    // }
 
-    displayNextTurn();
+    displayNextTurn(getGameStatus(gameBoard));
     return false; // game is not yet over
 }
 
-function displayNextTurn() {
+function displayNextTurn(gameStatus) {
 
-    let nextTurn = ((isBlackTurn(gameBoard)) ? 'X' : 'O');
+    console.log(gameStatus);
+    if ([false, "T", "X", "O"].indexOf(gameStatus) === -1) { // if gameStatus is an invalid value...something other than null, T, X, or O
+        console.log("gameStatus ERROR!");
+        return;
+    }
 
-    displayOutput(`It's now ${nextTurn}'s turn.`);
-}
+    if (!gameStatus) { // the game is not yet over
+        displayOutput(`It's now ${((isBlackTurn(gameBoard)) ? 'X' : 'O')}'s turn.`);
+    } else if (gameStatus ==="T") {
+        displayOutput("Game Over - It's a tie!");
+    } else { // gameStatus must be X or O
+        displayOutput(`Game Over - ${gameStatus} Wins!`);
+    }
 
-
-function displayWinner(winner){
-    displayOutput(`Game Over - ${winner} Wins!`);
-}
-
-function displayTie() {
-    displayOutput("Game Over - It's a tie!");
+    isGameOver = (gameStatus ? true : false);
 }
 
 function displayOutput(text) {
-    outputMsgEl.textContent = text;
+    document.getElementById("output-msg").textContent = text;
 }
 
 // Returns X, O, T, or False based on winner or not over
@@ -340,6 +312,7 @@ function playComputerMove() {
 
 
     function sleep (time) {
+        isPlayerTurn = false;
         return new Promise((resolve) => setTimeout(resolve, time));
       }
       
@@ -347,7 +320,7 @@ function playComputerMove() {
           // Do something after the sleep!
 
         let bestMove = whereShouldIPlay(gameBoard); // returns [row, col, X/O/T]
-
+        isPlayerTurn = true;
         processMove(document.getElementById(`cell-${bestMove[0]}-${bestMove[1]}`));
     })
         
