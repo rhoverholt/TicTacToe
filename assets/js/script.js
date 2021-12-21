@@ -13,12 +13,11 @@ function createGameTable() {
     for (let row=0; row < 3; row++) {
         gameTable.append(createRow(row));
         if (row < 2) {
-            gameTable.append(createRowDivider());
+            gameTable.append(createDivider("row"));
         }
     }
 
     function createRow(row) {
-        
         // create the row element itself
         let rowElement = document.createElement("div");
         rowElement.classList.add("row");
@@ -28,7 +27,7 @@ function createGameTable() {
         for (let col=0; col < 3; col++) {
             rowElement.append(createCell(row, col));
             if (col < 2) {
-                rowElement.append(createCellDivider());
+                rowElement.append(createDivider("col"));
             }
         }
         return rowElement;
@@ -39,17 +38,11 @@ function createGameTable() {
             cellElement.classList.add("cell");
             return cellElement;
         }
-
-        function createCellDivider() {
-            let divElement = document.createElement("div");
-            divElement.classList.add("divider","col-divider");
-            return divElement;
-        }
     }
 
-    function createRowDivider(element) {
+    function createDivider(typeStr) {
         let divElement = document.createElement("div");
-        divElement.classList.add("divider","row-divider");
+        divElement.classList.add("divider", typeStr + "-divider");
         return divElement;
     }
 }
@@ -76,7 +69,7 @@ function processClick(event) {
             return;
         case "refresh":
             window.location.reload();
-            return;
+            return; // just to be clear that it stops
     }
 
     // ignore the click if the game is over
@@ -95,24 +88,18 @@ function processClick(event) {
     if (element.textContent == "") {
         
         if (!isGameStarted) {
-            isGameStarted = true;
-            isPlayerBoth = false;
-            isPlayerBlack = true;
+            isGameStarted = true; isPlayerBoth = false; isPlayerBlack = true;
             document.getElementById("play-X").checked = true;
         }
-
         processMove(element);
-
         if (!isGameOver && !isPlayerBoth) {
             playComputerMove(); // plays the move and ends via processMove()
         }
-
     } else {
         console.log(`Clicked cell (${element.id}) already contains '${element.textContent}'`);
     }
 
     function processStartClick() {
-
         // set the isPlayer flags
         isPlayerBoth = document.getElementById("play-both").checked;
         isPlayerBlack = isPlayerBoth || document.getElementById("play-X").checked;
