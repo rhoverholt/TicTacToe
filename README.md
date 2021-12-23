@@ -1,6 +1,15 @@
 # TicTacToe
 The game of Tic Tac Toe, created primarily to practice Javascript
 
+## Technologies Used
+Javascript, HTML/CSS
+
+## Contact Info
+rhocoding@gmail.com
+
+## License
+MIT
+
 ## User Story
 
 ```
