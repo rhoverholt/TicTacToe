@@ -294,8 +294,8 @@ function playComputerMove() {
         // returns the row, col. X/O/T where we want to move
         // assumes that we need to make a move...the game is not yet over!
     function whereShouldIPlay(myBoard) {
-        
-        let newBoard = copyBoard(myBoard);
+ 
+        let newBoard = JSON.parse(JSON.stringify(myBoard))
 
         let whoseTurn = (isBlackTurn(myBoard) ? 'X' : 'O');
 
@@ -332,7 +332,7 @@ function playComputerMove() {
         function whoWins(myBoard) {
             let whoseTurn = (isBlackTurn(myBoard) ? 'X' : 'O');
 
-            let newBoard = copyBoard(myBoard);
+            let newBoard = JSON.parse(JSON.stringify(myBoard));
 
             let myResults = [];
 
@@ -340,10 +340,7 @@ function playComputerMove() {
                 let colArray = [];
                 for(let col=0; col<3; col++) {
                     if (myBoard[row][col] === 0) {
-                        // // create a copy of the board
-                        // var newBoard = copyBoard(myBoard);
-    
-                        // now add my move to it
+                        // add my move to the board
                         newBoard[row][col] = whoseTurn;
                         playResult = getGameStatus(newBoard);
                             
@@ -361,21 +358,6 @@ function playComputerMove() {
             }
             return chooseBestResult(myResults, whoseTurn)[2];
         }
-    }
-
-    function copyBoard(myBoard) {
-        let rowArray = [];
-        let row;
-        let col;
-        
-        for (row=0; row<3; row++) {
-            var colArray = [];
-            for (col=0; col<3; col++) {
-                colArray.push(myBoard[row][col]);
-            }
-            rowArray.push(colArray);
-        }
-        return rowArray;
     }
 
     // resultsArray has 3 rows of 3 columns, each being with 0 (already played), X, O, or T
