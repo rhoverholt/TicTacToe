@@ -15,8 +15,7 @@ header, footer {
 }
 
 #game-table {
-    margin: auto;
-/*    background: yellow; */
+    margin: 0 auto;
     height: 645px;
     width: 635px;
 }
@@ -49,7 +48,7 @@ header, footer {
 
 .col-divider {
     width: 10px;
-    height: 100%;
+    height: 100%; 
 }
 
 #play-O-btn {

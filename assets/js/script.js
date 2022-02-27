@@ -55,7 +55,7 @@ function createGameTable() {
 // Display message of game status showing who's move is next or who has won.
 function processClick(event) {
 
-    // ignore the click if it wasn't in a cell or button 
+    // ignore the click if it wasn't in a cell or button or it wasn't the player's turn
     if (event.target.id == "" || !isPlayerTurn) {
         return;
     }
@@ -88,8 +88,12 @@ function processClick(event) {
     if (element.textContent == "") {
         
         if (!isGameStarted) {
-            isGameStarted = true; isPlayerBoth = false; isPlayerBlack = true;
-            document.getElementById("play-X").checked = true;
+
+            if (document.getElementById("play-O").checked) return // ignore a cell click if O is select and game hasn't started
+
+            isPlayerBoth = document.getElementById("play-both").checked;
+
+            isGameStarted = true; isPlayerBlack = true;
         }
         processMove(element);
         if (!isGameOver && !isPlayerBoth) {
@@ -103,7 +107,6 @@ function processClick(event) {
         // set the isPlayer flags
         isPlayerBoth = document.getElementById("play-both").checked;
         isPlayerBlack = isPlayerBoth || document.getElementById("play-X").checked;
-
         isGameStarted = true;
 
         if (document.getElementById("play-O").checked) {
