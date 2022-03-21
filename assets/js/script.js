@@ -14,25 +14,24 @@ let isGameStarted = false,
   ],
   moveStack = []; // maintain a list of moves so they can be undone as needed
 
-const gameTable = document.getElementById("game-table");
-const playXEl = document.getElementById("play-X");
-const playOEl = document.getElementById("play-O");
-const playBothEl = document.getElementById("play-both");
-const startBtnEl = document.getElementById("start-btn");
-const undoBtnEl = document.getElementById("undo");
-const refreshBtnEl = document.getElementById("refresh");
-const playStatusEl = document.getElementById("play-status");
-const outputMsgEl = document.getElementById("output-msg");
+const gameTable = document.getElementById("game-table"),
+  playXEl = document.getElementById("play-X"),
+  playOEl = document.getElementById("play-O"),
+  playBothEl = document.getElementById("play-both"),
+  startBtnEl = document.getElementById("start-btn"),
+  undoBtnEl = document.getElementById("undo"),
+  refreshBtnEl = document.getElementById("refresh"),
+  playStatusEl = document.getElementById("play-status"),
+  outputMsgEl = document.getElementById("output-msg");
 
 const headerInputEls = [playXEl, playOEl, playBothEl, startBtnEl];
 
-// Setup button event listeners
 [
   ["start-btn", processStartClick],
   ["undo", processUndoClick],
   ["refresh", () => window.location.reload()],
-].forEach(([id, fun]) =>
-  document.getElementById(id).addEventListener("click", fun)
+].forEach(
+  ([id, fun]) => document.getElementById(id).addEventListener("click", fun) // Setup event listeners for each of the listed buttons.
 );
 
 createGameTable(); // create the HTML to display the game and the cell event listeners
@@ -41,39 +40,28 @@ displayOutput("Begin by choosing sides or simply making a move");
 
 function createGameTable() {
   for (let row = 0; row < 3; row++) {
-    // create the row element itself
     let rowEl = appendDiv(
       gameTable,
       `row-${row}`,
-      row === 1 ? ["row", "mid-row"] : ["row"]
-    );
+      row === 1 ? ["row", "mid-row"] : ["row"] // middle rows get borders so also need the 'mid-row' class.
+    ); // add the row elements to the DOM
 
-    // add the cell elements, and their event listeners, to the row
     for (let col = 0; col < 3; col++) {
       appendDiv(
         rowEl,
         `cell-${row}-${col}`,
-        col === 1 ? ["cell", "mid-col"] : ["cell"]
-      ).addEventListener("click", processCellClick);
+        col === 1 ? ["cell", "mid-col"] : ["cell"] // middle columns get borders so also need the 'mid-col' class.
+      ).addEventListener("click", processCellClick); // add an event listener to the returned cell element
     }
   }
-  return rowElement;
 
-  // define the function that creates the divs, providing the id and classes given.
   function appendDiv(parent, id, classes = []) {
     const child = document.createElement("div");
-    child.id = id ? id : "";
+    child.id = id;
     classes.forEach((item) => child.classList.add(item));
-    return parent.appendChild(child); // returns the child element
+    return parent.appendChild(child); // adds the new div to the DOM
   }
 }
-
-//   function createDivider(typeStr) {
-//     let divElement = document.createElement("div");
-//     divElement.classList.add("divider", typeStr + "-divider");
-//     return divElement;
-//   }
-// }
 
 // Verify the click is a valid move
 // Play the move.
@@ -113,9 +101,9 @@ function startNewGame(wasButtonClicked) {
     'input[name="play-side"]:checked'
   ).value;
 
-  if (gameType === "O" && !wasButtonClicked) return false; // the game has not been started!
+  if (gameType === oM && !wasButtonClicked) return false; // the game has not been started!
 
-  isPlayerBlack = !(gameType === "O");
+  isPlayerX = !(gameType === oM);
   isPlayerBoth = gameType === "Both";
   isGameStarted = true;
 
@@ -147,8 +135,8 @@ function processUndoClick() {
 
   if (isPlayerBoth) return; // only need to return the 1 move if the player is playing both Xs and Os
 
-  // As long as black hadn't just played in the 9th cell, and thus it remains black's turn after just one undo...
-  if (!(isPlayerBlack && isBlackTurn(gameBoard))) undoMove();
+  // As long as X hadn't just played in the 9th cell, and thus it remains X's turn after just one undo...
+  if (!(isPlayerX && isXsTurn(gameBoard))) undoMove();
 
   function undoMove() {
     if (!moveStack.length) {
@@ -182,7 +170,7 @@ function disableHeaderInput(isDisable) {
 // Place a move in the given element
 // Give a message on screen showing who won or who's turn is next.
 function processMove(element) {
-  if (isBlackTurn(gameBoard)) {
+  if (isXsTurn(gameBoard)) {
     element.textContent = "X";
   } else {
     element.textContent = "O";
@@ -200,15 +188,15 @@ function processMove(element) {
 }
 
 function displayNextTurn(gameStatus) {
-  if ([false, "T", "X", "O"].indexOf(gameStatus) === -1) {
-    // if gameStatus is an invalid value...something other than null, T, X, or O
-    console.log("gameStatus ERROR!");
-    return;
-  }
+  // if ([false, "T", "X", "O"].indexOf(gameStatus) === -1) {
+  //   // if gameStatus is an invalid value...something other than null, T, X, or O
+  //   console.log("gameStatus ERROR!");
+  //   return;
+  // }
 
   if (!gameStatus) {
     // the game is not yet over
-    displayOutput(`It's now ${isBlackTurn(gameBoard) ? "X" : "O"}'s turn.`);
+    displayOutput(`It's now ${isXsTurn(gameBoard) ? "X" : "O"}'s turn.`);
   } else if (gameStatus === "T") {
     displayOutput("Game Over - It's a tie!");
   } else {
@@ -221,10 +209,6 @@ function displayNextTurn(gameStatus) {
 
 function displayOutput(text) {
   outputMsgEl.textContent = text;
-
-  //   // gameStatus must be X or O
-  //   displayOutput(`Game Over - ${gameStatus} Wins!`);
-  // }
 
   isGameOver = gameStatus ? true : false;
 }
@@ -289,6 +273,7 @@ function playComputerMove() {
     return new Promise((resolve) => setTimeout(resolve, time));
   }
 
+  // It feels annoying for the computer to move immediately!
   sleep(500).then(() => {
     // Do something after the sleep!
 
@@ -300,9 +285,10 @@ function playComputerMove() {
   // returns the row, col. X/O/T where we want to move
   // assumes that we need to make a move...the game is not yet over!
   function whereShouldIPlay(myBoard) {
-    let newBoard = JSON.parse(JSON.stringify(myBoard));
+    let newBoard = myBoard.map((row) => row.map((cell) => cell)); // make a true copy, not just a new pointer to the same memory.
+    // let newBoard = JSON.parse(JSON.stringify(myBoard)); // make a true copy, not just a new pointer to the same memory.
 
-    let whoseTurn = isBlackTurn(myBoard) ? "X" : "O";
+    let whoseTurn = isXsTurn(myBoard) ? xM : oM;
 
     // create a result array for the results of all possible moves
     let myResults = [];
@@ -311,62 +297,25 @@ function playComputerMove() {
     for (let row = 0; row < 3; row++) {
       let colArray = [];
       for (let col = 0; col < 3; col++) {
-        if (myBoard[row][col] === 0) {
-          // add my move to it
-          newBoard[row][col] = whoseTurn;
-          let playResult = getGameStatus(newBoard);
+        if (myBoard[row][col] === emptyM) {
+          newBoard[row][col] = whoseTurn; // pretend to go here and see what happens.
+          let playResult = getGameStatus(newBoard); // does going here end the game?
 
           if (!playResult) {
-            // No winner is yet found
-            // recursively determine the best result by playing that move
-            playResult = whoWins(newBoard);
+            // No winner is yet found -- it didn't end the game
+            playResult = whereShouldIPlay(newBoard)[2]; // recursively pretend to play every possible move to see what happens
           }
           colArray.push(playResult);
-          newBoard[row][col] = 0; // remove my move from it
+          newBoard[row][col] = emptyM; // remove my move from it
         } else {
           // move not allowed
-          colArray.push(0);
+          colArray.push(emptyM);
         }
       }
       myResults.push(colArray);
     }
 
     return chooseBestResult(myResults, whoseTurn); // [row, col, X/O/T]
-
-    // A move has been played, but the game is not over
-    // given this board, who will win with best play by both?
-    // Returns X, O, T
-    function whoWins(myBoard) {
-      let whoseTurn = isBlackTurn(myBoard) ? "X" : "O";
-
-      let newBoard = JSON.parse(JSON.stringify(myBoard));
-
-      let myResults = [];
-
-      for (let row = 0; row < 3; row++) {
-        let colArray = [];
-        for (let col = 0; col < 3; col++) {
-          if (myBoard[row][col] === 0) {
-            // add my move to the board
-            newBoard[row][col] = whoseTurn;
-            playResult = getGameStatus(newBoard);
-
-            if (!playResult) {
-              // No winner is yet found
-              // recursively determine the best result by playing that move
-              playResult = whoWins(newBoard); // asking about a board with fewer available plays
-            }
-            colArray.push(playResult);
-            newBoard[row][col] = 0; // reset to the original board
-          } else {
-            // move not allowed
-            colArray.push(0);
-          }
-        }
-        myResults.push(colArray);
-      }
-      return chooseBestResult(myResults, whoseTurn)[2];
-    }
   }
 
   // resultsArray has 3 rows of 3 columns, each being with 0 (already played), X, O, or T
@@ -374,11 +323,11 @@ function playComputerMove() {
   // mySide says whether I'm X or O
   // Output: [row, col, X/O/T]
   function chooseBestResult(resultArray, mySide) {
-    let winArray = [];
-    let loseArray = [];
-    let tieArray = [];
+    let winArray = []; // store all the result array moves that resulted in me winning
+    let loseArray = []; // store all the result array moves that resulted in me losing
+    let tieArray = []; // store all the result array moves that resulted in a tie
 
-    otherSide = mySide === "X" ? "O" : "X";
+    otherSide = mySide === xM ? oM : xM;
 
     // cycle through all the results and select the best
     for (row = 0; row < 3; row++) {
@@ -398,42 +347,28 @@ function playComputerMove() {
       }
     }
 
-    // If we can win, play a winning move!
-    if (winArray.length > 0) {
-      randomIndex = Math.floor(Math.random() * winArray.length);
-      winArray[randomIndex].push(mySide);
-      return winArray[randomIndex];
-    }
+    return winArray.length > 0
+      ? [...randomCell(winArray), mySide] // if there's a winner, return a random winner
+      : tieArray.length > 0
+      ? [...randomCell(tieArray), "T"] // since no winner, return a random Tie if possible
+      : [...randomCell(loseArray), otherSide]; // No other option...return a random loser.
 
-    // else...if we can tie, play a tieing move
-    if (tieArray.length > 0) {
-      randomIndex = Math.floor(Math.random() * tieArray.length);
-      tieArray[randomIndex].push("T");
-      return tieArray[randomIndex];
+    function randomCell(cells) {
+      return cells[Math.floor(Math.random() * cells.length)];
     }
-
-    // else...play a losing move
-    if (loseArray.length > 0) {
-      randomIndex = Math.floor(Math.random() * loseArray.length);
-      loseArray[randomIndex].push(otherSide);
-      return loseArray[randomIndex];
-    }
-    console.log("You should never see this...");
   }
 }
 
-function isBlackTurn(board) {
+function isXsTurn(board) {
   // examine the board to see who's turn it must be
 
-  let moves = 0;
+  // count the number of moves played (e.g. where the cell is not empty)
+  let moves = board.reduce(
+    (prev, col) =>
+      prev +
+      col.reduce((prevRow, cell) => prevRow + (cell !== emptyM ? 1 : 0), 0),
+    0
+  );
 
-  for (row = 0; row < 3; row++) {
-    for (col = 0; col < 3; col++) {
-      // add one to moves if a play has been made in this cell
-      if (board[row][col] !== 0) {
-        moves++;
-      }
-    }
-  }
   return moves % 2 === 0; //return true if 0, 2, 4, 6, 8 moves have been played.
 }
