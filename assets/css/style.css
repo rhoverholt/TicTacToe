@@ -1,102 +1,95 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  /*    box-sizing: border-box;
 /*    border: 1px solid red; */
 }
 
 body {
-    height: 100vh;
+  height: 100vh;
 }
 
-header, footer {
-    text-align: center;
-    padding: 10px;
+header,
+footer {
+  text-align: center;
+  padding: 10px;
 }
 
 #game-table {
-    margin: auto;
-/*    background: yellow; */
-    height: 645px;
-    width: 635px;
+  margin: 0 auto;
+  height: 645px;
+  width: 635px;
 }
 
 .row {
-    display: flex;
-    height: 205px;
-    background: white;
-    justify-content: space-around;
-    align-items: center;
+  display: flex;
+  background: white;
+  justify-content: space-around;
+  align-items: center;
 }
 
 .cell {
-    font-size: 185px;
-    text-align: center;
-    vertical-align: middle;
-    width: 205px;
-    height: 100%;
+  font-size: 185px;
+  text-align: center;
+  vertical-align: middle;
+  width: 205px;
+  height: 205px;
 }
 
-.divider {
-    background: black;
-    display: inline-block;
+.mid-row {
+  border-top: 10px solid black;
+  border-bottom: 10px solid black;
 }
 
-.row-divider {
-    height: 10px;
-    width: 100%;
-}
-
-.col-divider {
-    width: 10px;
-    height: 100%;
+.mid-col {
+  border-left: 10px solid black;
+  border-right: 10px solid black;
 }
 
 #play-O-btn {
-    text-align: center;
+  text-align: center;
 }
 
 #footer-btns {
-    width: 470px;
-    display: inline-flex;
-    justify-content: space-between;
+  width: 470px;
+  display: inline-flex;
+  justify-content: space-between;
 }
 
 label {
-    padding: 0px 10px 0px 2px;
+  padding: 0px 10px 0px 2px;
 }
 
-input[type='radio'] {
-    margin-top: -12px;
-    vertical-align: middle;
+input[type="radio"] {
+  margin-top: -12px;
+  vertical-align: middle;
 }
 
-h1, input, label {
-    font-size: 2em;
+h1,
+input,
+label {
+  font-size: 2em;
 }
 
 @media screen and (max-width: 710px) {
+  #game-table {
+    height: 360px;
+    width: 350px;
+  }
 
-    #game-table {
-        height: 360px;
-        width: 350px;
-    }
+  .cell {
+    font-size: 110px;
+    width: 110px;
+    height: 110px;
+  }
 
-    .row {
-        height: 110px;
-    }
- 
-    .cell {
-        font-size: 110px;
-        width: 110px;
-    }
-    
-    h1, input, label {
-        font-size: 1.5em;
-    }
+  h1,
+  input,
+  label {
+    font-size: 1.5em;
+  }
 
-    #footer-btns {
-        width: 350px;
-    }
-    
+  #footer-btns {
+    width: 350px;
+  }
 }

@@ -1,190 +1,182 @@
+const emptyM = 0,
+  xM = "X",
+  oM = "O"; // These are the possible cell contents, empty, X or O.
+
 let isGameStarted = false,
   isGameOver = false,
   isPlayerBoth = false,
   isPlayerX = true,
   isPlayerTurn = true,
   gameBoard = [
-    [0, 0, 0],
-    [0, 0, 0],
-    [0, 0, 0],
-  ], // 0 = empty, 'X', 'O' = played
-  moveArray = []; // maintain a list of moves so they can be undone as needed
+    [emptyM, emptyM, emptyM],
+    [emptyM, emptyM, emptyM],
+    [emptyM, emptyM, emptyM],
+  ],
+  moveStack = []; // maintain a list of moves so they can be undone as needed
 
-createGameTable(); // create the HTML to display the game
+const gameTable = document.getElementById("game-table");
+const playXEl = document.getElementById("play-X");
+const playOEl = document.getElementById("play-O");
+const playBothEl = document.getElementById("play-both");
+const startBtnEl = document.getElementById("start-btn");
+const undoBtnEl = document.getElementById("undo");
+const refreshBtnEl = document.getElementById("refresh");
+const playStatusEl = document.getElementById("play-status");
+const outputMsgEl = document.getElementById("output-msg");
+
+const headerInputEls = [playXEl, playOEl, playBothEl, startBtnEl];
+
+// Setup button event listeners
+[
+  ["start-btn", processStartClick],
+  ["undo", processUndoClick],
+  ["refresh", () => window.location.reload()],
+].forEach(([id, fun]) =>
+  document.getElementById(id).addEventListener("click", fun)
+);
+
+createGameTable(); // create the HTML to display the game and the cell event listeners
+
 displayOutput("Begin by choosing sides or simply making a move");
 
-document.addEventListener("click", processClick);
-
 function createGameTable() {
-  // create the HTML to display the game
-  const gameTable = document.getElementById("game-table");
-
   for (let row = 0; row < 3; row++) {
-    gameTable.append(createRow(row));
-    if (row < 2) {
-      gameTable.append(createDivider("row"));
-    }
-  }
-
-  function createRow(row) {
     // create the row element itself
-    let rowElement = document.createElement("div");
-    rowElement.classList.add("row");
-    rowElement.id = `row-${row}`;
+    let rowEl = appendDiv(
+      gameTable,
+      `row-${row}`,
+      row === 1 ? ["row", "mid-row"] : ["row"]
+    );
 
-    // add the cell elements to the row
+    // add the cell elements, and their event listeners, to the row
     for (let col = 0; col < 3; col++) {
-      rowElement.append(createCell(row, col));
-      if (col < 2) {
-        rowElement.append(createDivider("col"));
-      }
-    }
-    return rowElement;
-
-    function createCell(row, col) {
-      let cellElement = document.createElement("div");
-      cellElement.id = `cell-${row}-${col}`;
-      cellElement.classList.add("cell");
-      return cellElement;
+      appendDiv(
+        rowEl,
+        `cell-${row}-${col}`,
+        col === 1 ? ["cell", "mid-col"] : ["cell"]
+      ).addEventListener("click", processCellClick);
     }
   }
+  return rowElement;
 
-  function createDivider(typeStr) {
-    let divElement = document.createElement("div");
-    divElement.classList.add("divider", typeStr + "-divider");
-    return divElement;
+  // define the function that creates the divs, providing the id and classes given.
+  function appendDiv(parent, id, classes = []) {
+    const child = document.createElement("div");
+    child.id = id ? id : "";
+    classes.forEach((item) => child.classList.add(item));
+    return parent.appendChild(child); // returns the child element
   }
 }
+
+//   function createDivider(typeStr) {
+//     let divElement = document.createElement("div");
+//     divElement.classList.add("divider", typeStr + "-divider");
+//     return divElement;
+//   }
+// }
 
 // Verify the click is a valid move
 // Play the move.
 // Determine if the game is over.
 // If not, play the computer's move.
-// Again determine if the game is over.
-// Display message of game status showing who's move is next or who has won.
-function processClick(event) {
-  // ignore the click if it wasn't in a cell or button
-  if (event.target.id == "" || !isPlayerTurn) {
-    return;
-  }
-
-  switch (event.target.id) {
-    case "start-btn":
-      processStartClick();
-      return;
-    case "undo":
-      processUndoClick();
-      return;
-    case "refresh":
-      window.location.reload();
-      return; // just to be clear that it stops
-  }
-
-  // ignore the click if the game is over
-  if (isGameOver) {
-    return;
-  }
+function processCellClick(event) {
+  // ignore the click if it wasn't the player's turn
+  if (!isPlayerTurn || isGameOver) return;
 
   let element = document.getElementById(event.target.id);
 
-  // ignore the click if it wasn't in a cell
-  if (!element.classList.contains("cell")) {
+  // ignore the click if the cell has already been played in
+  if (element.textContent) {
+    console.log(
+      `Clicked cell (${element.id}) already contains '${element.textContent}'`
+    );
     return;
   }
 
   // process the click that's in an empty cell
-  if (element.textContent == "") {
-    if (!isGameStarted) {
-      isGameStarted = true;
-      isPlayerBoth = false;
-      isPlayerBlack = true;
-      document.getElementById("play-X").checked = true;
-    }
-    processMove(element);
-    if (!isGameOver && !isPlayerBoth) {
-      playComputerMove(); // plays the move and ends via processMove()
-    }
-  } else {
-    console.log(
-      `Clicked cell (${element.id}) already contains '${element.textContent}'`
-    );
+
+  // Allow this to start the game if needed
+  if (!isGameStarted) {
+    if (!startNewGame(false)) return; //false parameters means start button was not pressed, false return means invalid user click.
   }
 
-  function processStartClick() {
-    // set the isPlayer flags
-    isPlayerBoth = document.getElementById("play-both").checked;
-    isPlayerBlack = isPlayerBoth || document.getElementById("play-X").checked;
+  // Play the move for the click!
+  processMove(element);
 
-    isGameStarted = true;
-
-    if (document.getElementById("play-O").checked) {
-      playComputerMove(); // plays the turn and ends via processMove
-      return;
-    }
-
-    // disable the radio buttons and the Start Button, as the game has started:
-
-    disableRadioButtons(true);
-
-    // make sure the refresh button is enabled (undo will enable once a move has been made)
-    document.getElementById("refresh").disabled = false;
-
-    // set the isPlayerBoth flag
-    isPlayerBoth = document.getElementById("play-both").checked;
-    isPlayerBlack = isPlayerBoth || document.getElementById("play-X").checked;
-
-    // wait for the player to take their turn, whether they are X or both.
-    displayNextTurn(false);
-    return;
-  }
-
-  function processUndoClick() {
-    undoMove();
-
-    if (!isPlayerBoth) {
-      // Need to undo two moves, the computer's and the player's
-      // but if the player is black and the board board was full only the one move
-      // needs to be undone...
-      if (!isPlayerBlack || (isPlayerBlack && !isBlackTurn(gameBoard))) {
-        undoMove();
-      }
-    }
-
-    function undoMove() {
-      isGameOver = false;
-
-      if (!moveArray.length) {
-        displayOutput("There are no moves to undo!");
-        return;
-      }
-
-      var [row, col] = moveArray.pop();
-
-      document.getElementById(`cell-${row}-${col}`).textContent = "";
-      gameBoard[row][col] = 0;
-
-      if (!moveArray.length) {
-        // no more moves to undo so disable the button
-        disableRadioButtons(false);
-
-        // make sure the undo and refresh buttons are enabled
-        document.getElementById("undo").disabled = true;
-        document.getElementById("refresh").disabled = true;
-      }
-
-      displayNextTurn(false);
-    }
+  if (!isGameOver && !isPlayerBoth) {
+    playComputerMove(); // plays the move and ends via processMove()
   }
 }
 
-function disableRadioButtons(isDisable) {
-  document.getElementById("play-X").disabled = isDisable;
-  document.getElementById("play-O").disabled = isDisable;
-  document.getElementById("play-both").disabled = isDisable;
-  document.getElementById("start-btn").disabled = isDisable;
-  document.getElementById("play-status").textContent = isDisable
-    ? "I'm playing: "
-    : "I'll play";
+function startNewGame(wasButtonClicked) {
+  const gameType = document.querySelector(
+    'input[name="play-side"]:checked'
+  ).value;
+
+  if (gameType === "O" && !wasButtonClicked) return false; // the game has not been started!
+
+  isPlayerBlack = !(gameType === "O");
+  isPlayerBoth = gameType === "Both";
+  isGameStarted = true;
+
+  // disable the Header input, as a move has been made:
+  disableHeaderInput(true);
+
+  // enable the undo and refresh buttons
+  undoBtnEl.disabled = false;
+  refreshBtnEl.disabled = false;
+
+  return true; // the game has been started!
+}
+
+function processStartClick() {
+  startNewGame(true);
+
+  if (playOEl.checked) {
+    playComputerMove(); // plays the turn and ends via processMove
+    return;
+  }
+
+  // wait for the player to take their turn, whether they are X or both.
+  displayNextTurn(false);
+  return;
+}
+
+function processUndoClick() {
+  undoMove();
+
+  if (isPlayerBoth) return; // only need to return the 1 move if the player is playing both Xs and Os
+
+  // As long as black hadn't just played in the 9th cell, and thus it remains black's turn after just one undo...
+  if (!(isPlayerBlack && isBlackTurn(gameBoard))) undoMove();
+
+  function undoMove() {
+    if (!moveStack.length) {
+      // no more moves to undo so start over
+      window.location.reload();
+      return; // Just to make it obvious.
+    }
+
+    isGameOver = false;
+
+    let [row, col] = moveStack.pop();
+
+    if (!moveStack.length) {
+      // no more moves to undo so start over
+      window.location.reload();
+      return; // Just to make it obvious.
+    }
+
+    document.getElementById(`cell-${row}-${col}`).textContent = "";
+    gameBoard[row][col] = 0;
+
+    displayNextTurn(false);
+  }
+}
+
+function disableHeaderInput(isDisable) {
+  headerInputEls.forEach((btn) => (btn.disabled = isDisable));
+  playStatusEl.textContent = isDisable ? "I'm playing: " : "I'll play";
 }
 
 // Place a move in the given element
@@ -197,18 +189,11 @@ function processMove(element) {
   }
 
   // update the gameBoard
-  row = element.id[5]; // 'cell-R-C'
-  col = element.id[7];
+  let row = element.id[5]; // 'cell-R-C'
+  let col = element.id[7];
 
-  moveArray.push([row, col]);
+  moveStack.push([row, col]);
   gameBoard[row][col] = element.textContent;
-
-  // disable the radio buttons and the Start Button, as a move has been made:
-  disableRadioButtons(true);
-
-  // make sure the undo and refresh buttons are enabled
-  document.getElementById("undo").disabled = false;
-  document.getElementById("refresh").disabled = false;
 
   displayNextTurn(getGameStatus(gameBoard));
   return false; // game is not yet over
@@ -230,6 +215,16 @@ function displayNextTurn(gameStatus) {
     // gameStatus must be X or O
     displayOutput(`Game Over - ${gameStatus} Wins!`);
   }
+
+  isGameOver = gameStatus ? true : false;
+}
+
+function displayOutput(text) {
+  outputMsgEl.textContent = text;
+
+  //   // gameStatus must be X or O
+  //   displayOutput(`Game Over - ${gameStatus} Wins!`);
+  // }
 
   isGameOver = gameStatus ? true : false;
 }
