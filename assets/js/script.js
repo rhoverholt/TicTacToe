@@ -229,17 +229,15 @@ function playComputerMove() {
       for (let col = 0; col < 3; col++) {
         if (myBoard[row][col] === emptyM) {
           newBoard[row][col] = whoseTurn; // pretend to go here and see what happens.
-          let playResult = getGameStatus(newBoard); // does going here end the game?
+          let playResult = getGameStatus(newBoard); // does going here result in a win or tie?
 
           if (!playResult) {
-            // No winner is yet found -- it didn't end the game
             playResult = whereShouldIPlay(newBoard)[2]; // recursively pretend to play every possible move to see what happens
           }
           colArray.push(playResult);
-          newBoard[row][col] = emptyM; // remove my move from it
+          newBoard[row][col] = emptyM; // remove my move from the virtual board so I can look at other options
         } else {
-          // move not allowed
-          colArray.push(emptyM);
+          colArray.push(emptyM); // move not allowed as it has already been played
         }
       }
       myResults.push(colArray);
@@ -290,15 +288,11 @@ function playComputerMove() {
 }
 
 function isXsTurn(board) {
-  // examine the board to see who's turn it must be
-
-  // count the number of moves played (e.g. where the cell is not empty)
   let moves = board.reduce(
-    (prev, col) =>
-      prev +
-      col.reduce((prevRow, cell) => prevRow + (cell !== emptyM ? 1 : 0), 0),
+    (prev, row) =>
+      prev + row.reduce((prev, cell) => prev + (cell !== emptyM ? 1 : 0), 0),
     0
-  );
+  ); // this counts the number of moves played (e.g. where the cell is not empty)
 
-  return moves % 2 === 0; //return true if 0, 2, 4, 6, 8 moves have been played.
-}
+  return moves % 2 === 0; //return true if 0, 2, 4, 6, 8 moves have been played (as that means it is X's turn).
+} // returns true if it is X's turn
